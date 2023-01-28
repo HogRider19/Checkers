@@ -1,4 +1,3 @@
-import datetime
 import uuid
 
 from fastapi_users import schemas as fastapi_users_schemas

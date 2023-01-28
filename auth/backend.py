@@ -1,6 +1,5 @@
 from fastapi_users.authentication import (AuthenticationBackend,
-                                          BearerTransport, CookieTransport,
-                                          JWTStrategy)
+                                          CookieTransport, JWTStrategy)
 
 from config.config import SECRET
 
