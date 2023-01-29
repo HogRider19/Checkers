@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from auth.router import auth_router, register_router
-from checkers.router import checkers_router
+from checkers.router_html import checkers_html_router
 from database.db import create_db_and_tables
 
 
@@ -21,8 +21,8 @@ app.include_router(
     tags=["auth"])
 
 app.include_router(
-    checkers_router,
-    tags=["game"],
+    checkers_html_router,
+    tags=["html"],
 )
 
 @app.on_event('startup')
