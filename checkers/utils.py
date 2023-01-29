@@ -27,13 +27,14 @@ class GameController:
 class CheckersGame:
 
     def __init__(self) -> None:
-        pass
+        self._board = Board(size=8)
 
 
 class Board:
 
-    def __init__(self) -> None:
-        self._board = self._generate_initial_state_board(size=8)
+    def __init__(self, size: int = 8) -> None:
+        self._size = size
+        self._board = self._generate_initial_state_board(size=size)
         self._cell_letters_map = {letter: index for index,
                                     letter in enumerate(ascii_lowercase)}
 
@@ -48,12 +49,16 @@ class Board:
     def __str__(self):
         st, letters_map = f"\n", {None: '   ', 0: ' w ', 1: ' b '}
         for row_index, row in enumerate(self._board[::-1]):
-            st += f'{8-row_index} |'
+            st += f'{self._size-row_index}'
+            st += ' |' if self._size-row_index < 10 \
+                            and self._size > 9 else '|'
             for cell in row:
                 st += letters_map.get(cell)
             st += '\n'
-        bottom_markup = ''.join([f" {l} " for l in ascii_lowercase[:8]])
-        st += f"   {'_'*24}\n   {bottom_markup}\n"
+        markup = ''.join([f" {l} " for l in ascii_lowercase[:self._size]])
+        st += f"   {'_'*self._size*3}\n  "
+        st += ' ' if self._size > 9 else ''
+        st += f"{markup}\n"
         return st
 
     @staticmethod
@@ -71,3 +76,9 @@ class Board:
     def _parse_cell_position(self, pos: str) -> tuple[int, int]:
         return (int(pos[1])-1, self._cell_letters_map[pos[0]])
 
+b = Board(15)
+
+b['h2'] = 1
+b['f8'] = 0
+
+print(b)
