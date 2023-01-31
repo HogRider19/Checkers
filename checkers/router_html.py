@@ -14,3 +14,7 @@ def home(request: Request):
 @checkers_html_router.get('/search')
 def game_search(request: Request):
     return templates.TemplateResponse('checkers/gameSearch.html', context={'request': request})
+
+@checkers_html_router.get('/game')
+def game_field(request: Request):
+    return templates.TemplateResponse('checkers/gameField.html', context={'request': request})

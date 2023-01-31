@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<center>
+    <br>
+    <h1>Game Board</h1>
+    <br>
+    <img src="{{url_for('static', path='/images/board_1.png')}}" style="width: 35%;">
+</center>
+<script src="{{url_for('static', path='/js/gameController.js')}}"></script>
+{% endblock %}

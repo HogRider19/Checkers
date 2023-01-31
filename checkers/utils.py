@@ -1,19 +1,38 @@
-from fastapi import WebSocket
-from string import ascii_lowercase
 from enum import Enum
+from string import ascii_lowercase
+
+from fastapi import WebSocket
+from typing import Callable
+from functools import wraps
 
 
 class Figure(Enum):
     WHITE: int = 0
     BLACK: int = 1
 
+
 class GameRsponseCode(Enum):
     success: int = 0
     invalid_move: int = 1
 
-class GameController:
+
+def singleton(cls: Callable):
+    instance = None
+
+    @wraps(cls)
+    def inner(*args, **kwargs):
+        nonlocal instance
+        if instance is None:
+            instance = cls(*args, **kwargs)
+        return instance
+
+    return inner
+
+
+class WebsocketController:
     
     def __init__(self) -> None:
+        self._game = GameController()
         self._sessions = {
             'player_1': None,
             'player_2': None,
@@ -29,19 +48,45 @@ class GameController:
     def add_spectators(self, session: WebSocket) -> None:
         self._sessions['spectators'].append(session)
 
-    def send_message_everyone(self, message: str) -> None:
-        self.send_message_players(message)
-        self.send_message_spectators(message)
+    def make_move(self, session: WebSocket, comand: str):
+        return self._game.make_move(comand)
 
-    def send_message_players(self, message: str) -> None:
-        pass
+    async def send_message_everyone(self, message: str) -> None:
+        await self.send_message_players(message)
+        await self.send_message_spectators(message)
 
-    def send_message_spectators(self, message: str) -> None:
-        pass
+    async def send_message_players(self, message: str) -> None:
+        await self._send_message(self._sessions['player_1'], message)
+        await self._send_message(self._sessions['player_2'], message)
+
+    async def send_message_spectators(self, message: str) -> None:
+        for sp in self._sessions.get('spectators'):
+            await self._send_message(sp, message)
 
     @staticmethod
-    async def _send_message(session: WebSocket, command: str) -> None:
-        await session.send_json(command)
+    async def _send_message(session: WebSocket, message: str) -> None:
+        await session.send_text(message)
+
+
+@singleton
+class WebSocketControllerGroup:
+    
+    def __init__(self, limit: int) -> None:
+        self._groups: dict[str, WebsocketController] = {}
+        self._limit = limit
+
+    def __getitem__(self, id: str) -> WebsocketController | None:
+        return self._groups.get(id)
+
+    def create_game(self, id: str) -> bool:
+        created = False
+        if len(self._groups) <= self._limit:
+            self._groups.update({id: WebsocketController()})
+            created = True
+        return created
+
+    def delete_game(self, id: str) -> None:
+        del self._groups[id]
 
 
 class CellOperationsMixin:
@@ -166,7 +211,7 @@ class Move(CellOperationsMixin):
         ]
 
 
-class CheckersGame(CellOperationsMixin):
+class GameController(CellOperationsMixin):
 
     def __init__(self) -> None:
         self._board = Board(size=8)
@@ -183,21 +228,25 @@ class CheckersGame(CellOperationsMixin):
             self._board[move._from] = None
             self._board[move._to] = self.whose_move
             self._whose_move = 1 if self._whose_move == 0 else 0
-        return is_valid
+        if is_valid:
+            return GameRsponseCode.success
+        else:
+            return GameRsponseCode.invalid_move
 
     @property
     def whose_move(self) -> int:
         return self._whose_move
 
 
-g = CheckersGame()
-while True:
-    print(g._board)
-    print(f"Player: {'White' if g.whose_move == 0 else 'Black'}")
-    move_code = input("Move: ").split(' ')
-    is_valid = g.make_move(move_code)
-    if not is_valid:
-        print("Invalid move!")
+if __name__ == '__main__':
+    g = GameController
+    while True:
+        print(g._board)
+        print(f"Player: {'White' if g.whose_move == 0 else 'Black'}")
+        move_code = input("Move: ").split(' ')
+        is_valid = g.make_move(move_code)
+        if not is_valid:
+            print("Invalid move!")
 
 
 
