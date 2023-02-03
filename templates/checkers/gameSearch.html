@@ -7,21 +7,41 @@
         <br>
         <h1>Game search!</h1>
         <div class="container-fluid" style="width: 30%;">
-            <form class="d-flex" role="search">
+            <form class="d-flex" onsubmit="UpdateGameList();return false;">
                 <input class="form-control me-2" type="search" placeholder="Game name" aria-label="Search">
                 <button class="btn btn-outline-success" type="submit">Search</button>
+                <button class="btn btn-outline-primary" type="submit"
+                    style="position: relative; left: 10px;">Update</button>
             </form>
         </div>
         <br>
 
-        <ul class="list-group" style="width: 50%;">
-            <li class="list-group-item">An item</li>
-            <li class="list-group-item">A second item</li>
-            <li class="list-group-item">A third item</li>
-            <li class="list-group-item">A fourth item</li>
-            <li class="list-group-item">And a fifth one</li>
-        </ul>
+        <ul id="gameUI" class="list-group" style="width: 50%;"></ul>
+
 
     </div>
+
+    <br>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item"><a class="page-link" href="#">1</a></li>
+            <li class="page-item"><a class="page-link" href="#">2</a></li>
+            <li class="page-item"><a class="page-link" href="#">3</a></li>
+            <li class="page-item">
+                <a class="page-link" href="#" aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+
 </center>
+
+<script src="{{url_for('static', path='/js/findGame.js')}}"></script>
+
 {% endblock %}

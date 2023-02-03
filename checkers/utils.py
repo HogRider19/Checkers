@@ -31,8 +31,8 @@ def singleton(cls: Callable):
 
 class WebsocketController:
     
-    def __init__(self) -> None:
-        self._game = GameController()
+    def __init__(self, name: str, password: str) -> None:
+        self._game = GameController(name, password)
         self._sessions = {
             'player_1': None,
             'player_2': None,
@@ -67,6 +67,14 @@ class WebsocketController:
     async def _send_message(session: WebSocket, message: str) -> None:
         await session.send_text(message)
 
+    @property
+    def name(self):
+        return self._game.name
+
+    @property
+    def password(self):
+        return self._game.password
+
 
 @singleton
 class WebSocketControllerGroup:
@@ -78,10 +86,13 @@ class WebSocketControllerGroup:
     def __getitem__(self, id: str) -> WebsocketController | None:
         return self._groups.get(id)
 
-    def create_game(self, id: str) -> bool:
+    def game_list(self) -> list[str, str]:
+        return [[self._groups[id].name, id] for id in self._groups]
+
+    def create_game(self, id: str, name: str, password: str) -> bool:
         created = False
         if len(self._groups) <= self._limit:
-            self._groups.update({id: WebsocketController()})
+            self._groups.update({id: WebsocketController(name, password)})
             created = True
         return created
 
@@ -213,7 +224,9 @@ class Move(CellOperationsMixin):
 
 class GameController(CellOperationsMixin):
 
-    def __init__(self) -> None:
+    def __init__(self, name: str, password: str) -> None:
+        self._name = name
+        self._password = password
         self._board = Board(size=8)
         self._whose_move = 0
 
@@ -237,6 +250,13 @@ class GameController(CellOperationsMixin):
     def whose_move(self) -> int:
         return self._whose_move
 
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def password(self):
+        return self._password
 
 if __name__ == '__main__':
     g = GameController
