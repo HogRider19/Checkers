@@ -8,6 +8,9 @@ from checkers.router import checkers_router
 from database.db import create_db_and_tables
 
 
+from checkers.utils import WebSocketControllerGroup
+from uuid import uuid4
+
 app = FastAPI(title='Checkers')
 
 origins = [
@@ -45,6 +48,9 @@ app.include_router(
     tags=["checkers"],
 )
 
+ws_group = WebSocketControllerGroup(limit=10)
+
 @app.on_event('startup')
 async def startup():
+    ws_group.create_game("jawehgvjkwhaeejhroghkjewrg", 'Test Game', '1234')
     await create_db_and_tables()

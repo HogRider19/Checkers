@@ -6,7 +6,26 @@
     <br>
     <h1>Game Board</h1>
     <br>
-    <img src="{{url_for('static', path='/images/board_1.png')}}" style="width: 35%;">
+    <canvas id="board" width="500" height="500" style="background-color:#eee; border:1px solid #ccc;"></canvas>
+    <img id="white_figure" src="{{url_for('static', path='/images/white_figure.png')}}" style="display: none;">
+    <img id="black_figure" src="{{url_for('static', path='/images/black_figure.png')}}" style="display: none;">
 </center>
+
+<input type="text" onchange="calltest(this.value)">
+
 <script src="{{url_for('static', path='/js/gameController.js')}}"></script>
+<script>
+    function convasInit() {
+        var canvas = document.getElementById("board")
+        var context = canvas.getContext("2d");
+
+        var img = new Image();
+        img.src = "{{url_for('static', path='/images/board_1.png')}}";
+        img.onload = function () {
+            context.drawImage(img, 0, 0, 500, 500);
+        };
+    }
+
+    convasInit()
+</script>
 {% endblock %}

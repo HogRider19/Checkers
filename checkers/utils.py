@@ -29,6 +29,108 @@ def singleton(cls: Callable):
     return inner
 
 
+class CellOperationsMixin:
+
+    def _parse_cell_position(self, pos: str) -> tuple[int, int]:
+        return (int(pos[1])-1, ascii_lowercase.find(pos[0]))
+
+    def _form_position_cell(self, x: int, y: int) -> str:
+        return f"{ascii_lowercase[x]}{y+1}"
+
+    def _get_displace_cell(self, pos: str, drow: int, dcol: int) -> str:
+        r, c = self._parse_cell_position(pos)
+        return self._form_position_cell(c+dcol, r+drow)
+
+class Board(CellOperationsMixin):
+
+    def __init__(self, size: int = 8) -> None:
+        self._size = size
+        self._board = self._generate_initial_state_board(size=size)
+
+    def __getitem__(self, key: str) -> int | None:
+        row_index, col_index = self._parse_cell_position(key)
+        return self._board[row_index][col_index]
+
+    def __setitem__(self, key, value) -> None:
+        row_index, col_index = self._parse_cell_position(key)
+        self._board[row_index][col_index] = value
+
+    def __repr__(self) -> str:
+        st = ''
+        for cell in sum(self._board, []):
+            st += f"{cell if cell is not None else -1},"
+        return st
+    
+    def __str__(self):
+        st = f"\n"
+        letters_map = {None: '   ', 0: ' w ', 1: ' b ', 2: 'W', 3: 'B'}
+        for row_index, row in enumerate(self._board[::-1]):
+            st += f'{self._size-row_index}'
+            st += ' |' if self._size-row_index < 10 \
+                            and self._size > 9 else '|'
+            for cell in row:
+                st += letters_map.get(cell)
+            st += '\n'
+        markup = ''.join([f" {l} " for l in ascii_lowercase[:self._size]])
+        st += f"   {'_'*self._size*3}\n  "
+        st += ' ' if self._size > 9 else ''
+        st += f"{markup}\n"
+        return st
+
+    @staticmethod
+    def _generate_initial_state_board(size: int = 8) -> list[list[int | None]]:
+        board = [[None]*size for _ in range(size)]
+        for row_index, row in enumerate(board):
+            for col_index, _ in enumerate(row):
+                if row_index % 2 == col_index % 2:
+                    if row_index <= 2:
+                        board[row_index][col_index] = Figure.WHITE.value
+                    elif row_index >= size - 3:
+                        board[row_index][col_index] = Figure.BLACK.value
+        return board
+
+
+class GameController(CellOperationsMixin):
+
+    def __init__(self, name: str, password: str) -> None:
+        self._name = name
+        self._password = password
+        self._board = Board(size=8)
+        self._whose_move = 0
+
+    def make_move(self, move_code: list[str]) -> GameRsponseCode:
+        move = Move(move_code, self._whose_move, self._board)
+        is_valid = move.is_valide()
+        is_eating = move.is_eating()
+        if is_valid:
+            if is_eating:
+                eating_cell = move.get_eating_cell()
+                self._board[eating_cell] = None
+            self._board[move._from] = None
+            self._board[move._to] = self.whose_move
+            self._whose_move = 1 if self._whose_move == 0 else 0
+        if is_valid:
+            return GameRsponseCode.success
+        else:
+            return GameRsponseCode.invalid_move
+
+    @property
+    def board(self) -> Board:
+        return self._board
+
+    @property
+    def whose_move(self) -> int:
+        return self._whose_move
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def password(self):
+        return self._password
+
+
 class WebsocketController:
     
     def __init__(self, name: str, password: str) -> None:
@@ -39,25 +141,39 @@ class WebsocketController:
             'spectators': [],
         }
 
-    def add_player(self, session: WebSocket) -> None:
-        if self._sessions['player_1'] is not None:
+    def add_player(self, session: WebSocket) -> Figure:
+        if self._sessions['player_1'] is None:
             self._sessions['player_1'] = session
-        elif self._sessions['player_2'] is not None:
+            return Figure.WHITE.value
+        elif self._sessions['player_2'] is None:
             self._sessions['player_2'] = session
+            return Figure.BLACK.value
 
     def add_spectators(self, session: WebSocket) -> None:
         self._sessions['spectators'].append(session)
 
-    def make_move(self, session: WebSocket, comand: str):
+    def make_move(self, session: WebSocket, raw_comand: str) -> GameRsponseCode:
+        comand = raw_comand.split(' ')[:2]
         return self._game.make_move(comand)
+
+    def disconnect(self, session: WebSocket) -> None:
+        if session in self._sessions['spectators']:
+            self._sessions['spectators'].remove(session)
+        else:
+            if self._sessions['player_1'] == session:
+                self._sessions['player_1'] == None
+            if self._sessions['player_2'] == session:
+                self._sessions['player_2'] == None
 
     async def send_message_everyone(self, message: str) -> None:
         await self.send_message_players(message)
         await self.send_message_spectators(message)
 
     async def send_message_players(self, message: str) -> None:
-        await self._send_message(self._sessions['player_1'], message)
-        await self._send_message(self._sessions['player_2'], message)
+        if self._sessions['player_1'] is not None:
+            await self._send_message(self._sessions['player_1'], message)
+        if self._sessions['player_2'] is not None:
+            await self._send_message(self._sessions['player_2'], message)
 
     async def send_message_spectators(self, message: str) -> None:
         for sp in self._sessions.get('spectators'):
@@ -65,7 +181,11 @@ class WebsocketController:
 
     @staticmethod
     async def _send_message(session: WebSocket, message: str) -> None:
-        await session.send_text(message)
+        await session.send_json(message)
+
+    @property
+    def game(self) -> GameController:
+        return self._game
 
     @property
     def name(self):
@@ -98,62 +218,6 @@ class WebSocketControllerGroup:
 
     def delete_game(self, id: str) -> None:
         del self._groups[id]
-
-
-class CellOperationsMixin:
-
-    def _parse_cell_position(self, pos: str) -> tuple[int, int]:
-        return (int(pos[1])-1, ascii_lowercase.find(pos[0]))
-
-    def _form_position_cell(self, x: int, y: int) -> str:
-        return f"{ascii_lowercase[x]}{y+1}"
-
-    def _get_displace_cell(self, pos: str, drow: int, dcol: int) -> str:
-        r, c = self._parse_cell_position(pos)
-        return self._form_position_cell(c+dcol, r+drow)
-
-
-class Board(CellOperationsMixin):
-
-    def __init__(self, size: int = 8) -> None:
-        self._size = size
-        self._board = self._generate_initial_state_board(size=size)
-
-    def __getitem__(self, key: str) -> int | None:
-        row_index, col_index = self._parse_cell_position(key)
-        return self._board[row_index][col_index]
-
-    def __setitem__(self, key, value) -> None:
-        row_index, col_index = self._parse_cell_position(key)
-        self._board[row_index][col_index] = value
-    
-    def __str__(self):
-        st = f"\n"
-        letters_map = {None: '   ', 0: ' w ', 1: ' b ', 2: 'W', 3: 'B'}
-        for row_index, row in enumerate(self._board[::-1]):
-            st += f'{self._size-row_index}'
-            st += ' |' if self._size-row_index < 10 \
-                            and self._size > 9 else '|'
-            for cell in row:
-                st += letters_map.get(cell)
-            st += '\n'
-        markup = ''.join([f" {l} " for l in ascii_lowercase[:self._size]])
-        st += f"   {'_'*self._size*3}\n  "
-        st += ' ' if self._size > 9 else ''
-        st += f"{markup}\n"
-        return st
-
-    @staticmethod
-    def _generate_initial_state_board(size: int = 8) -> list[list[int | None]]:
-        board = [[None]*size for _ in range(size)]
-        for row_index, row in enumerate(board):
-            for col_index, _ in enumerate(row):
-                if row_index % 2 == col_index % 2:
-                    if row_index <= 2:
-                        board[row_index][col_index] = Figure.WHITE.value
-                    elif row_index >= size - 3:
-                        board[row_index][col_index] = Figure.BLACK.value
-        return board
 
 
 class Move(CellOperationsMixin):
@@ -221,42 +285,6 @@ class Move(CellOperationsMixin):
             self._get_displace_cell(self._from, 2 * self._direct, -2),
         ]
 
-
-class GameController(CellOperationsMixin):
-
-    def __init__(self, name: str, password: str) -> None:
-        self._name = name
-        self._password = password
-        self._board = Board(size=8)
-        self._whose_move = 0
-
-    def make_move(self, move_code: list[str]) -> GameRsponseCode:
-        move = Move(move_code, self._whose_move, self._board)
-        is_valid = move.is_valide()
-        is_eating = move.is_eating()
-        if is_valid:
-            if is_eating:
-                eating_cell = move.get_eating_cell()
-                self._board[eating_cell] = None
-            self._board[move._from] = None
-            self._board[move._to] = self.whose_move
-            self._whose_move = 1 if self._whose_move == 0 else 0
-        if is_valid:
-            return GameRsponseCode.success
-        else:
-            return GameRsponseCode.invalid_move
-
-    @property
-    def whose_move(self) -> int:
-        return self._whose_move
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def password(self):
-        return self._password
 
 if __name__ == '__main__':
     g = GameController
