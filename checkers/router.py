@@ -4,7 +4,8 @@ from loguru import logger
 from fastapi import (APIRouter, Path, WebSocket, WebSocketDisconnect,
                     WebSocketException, Body, Query)
 
-from checkers.utils import WebSocketControllerGroup, GameRsponseCode
+from checkers.enums import GameRsponseCode
+from checkers.websockets import WebSocketControllerGroup
 
 checkers_router = APIRouter()
 ws_group = WebSocketControllerGroup(limit=10)
@@ -56,13 +57,12 @@ async def connect(ws: WebSocket, id: str = Path(...)) -> None:
     while True:
         try:
             await ws_controller.send_message_everyone(
-                ws_controller.game.board._board)
+                ws_controller.game.board.data)
             message = await ws.receive_text()
             code = ws_controller.make_move(ws, message)
         except WebSocketDisconnect:
             logger.debug("disconnect")
             ws_controller.disconnect(ws)
-            # await ws.close()
             break
 
 

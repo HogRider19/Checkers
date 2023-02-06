@@ -23,9 +23,10 @@ ws.onclose= function (event)
 function displayBoard(data) {
     var board = document.getElementById('board');
     var context = board.getContext("2d");
-    context.clearRect(0, 0, board.width, board.height);
     var w_figure = document.getElementById('white_figure')
     var b_figure = document.getElementById('black_figure')
+    var background = document.getElementById('board_background')
+    context.drawImage(background, 0, 0, 500, 500);
     for (var i = 0; i < 8; i++) {
         for (var j = 0; j < 8; j++) {
             var figure;
@@ -38,7 +39,7 @@ function displayBoard(data) {
             var offset = 24
             var size = (500-2*offset)/8
             var x = offset + size*j
-            var y = offset + size*i
+            var y = 500 - size*i - 3.3*offset
             context.drawImage(figure, x, y, size, size);
         }
     }

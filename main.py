@@ -8,7 +8,7 @@ from checkers.router import checkers_router
 from database.db import create_db_and_tables
 
 
-from checkers.utils import WebSocketControllerGroup
+from checkers.websockets import WebSocketControllerGroup
 from uuid import uuid4
 
 app = FastAPI(title='Checkers')
