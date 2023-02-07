@@ -1,13 +1,56 @@
 
 
-game_uuid = window.location.href.split('/').at(-1);
+var game_uuid = window.location.href.split('/').at(-1);
 
 var ws = new WebSocket(url = `ws://localhost:8000/ws/${game_uuid}`);
+
+
+const ServerMessageType = {
+    FigureType: 0,
+    Board: 1,
+    MoveResponse: 2,
+    InvalidRequest: 3,
+    NotYourMove: 4,
+    InvalidMove: 5,
+}; 
+
+const ClientMessageType = {
+    GetMyFigureType: 0,
+    GetBoard: 1,
+    MakeMove: 2, 
+}
+
 
 ws.onmessage = function (event) 
 {
     var data = JSON.parse(event.data);
-    displayBoard(data);
+
+    switch(data.type)
+    {
+        case ServerMessageType.FigureType:
+            figureText = document.getElementById('figureType');
+            figureText.innerText = "Your figures: " + String(data.message);
+            break;
+    
+        case ServerMessageType.Board:
+            displayBoard(data.message);
+            break;
+
+        case ServerMessageType.InvalidRequest:
+            displayMessage("Invalid request! ");
+            break;
+
+        case ServerMessageType.NotYourMove:
+            displayMessage("Not your move! ");
+            break;
+
+        case ServerMessageType.InvalidMove:
+            displayMessage("Invalid move! ");
+            break;
+       
+        default:
+            displayMessage("Invalid server response!");
+    }
 }
 
 ws.onopen = function (event) 
@@ -18,6 +61,11 @@ ws.onopen = function (event)
 ws.onclose= function (event) 
 {
     console.log("Connection close")
+}
+
+function displayMessage(message){
+    figureText = document.getElementById('message')
+    figureText.innerText = "Message: " + message
 }
 
 function displayBoard(data) {
@@ -49,6 +97,12 @@ function displayBoard(data) {
 function calltest(command) {
     ws.send(command);
 }
+
+setTimeout(() => {
+    ws.send(JSON.stringify({'type': 0}));
+    ws.send(JSON.stringify({'type': 1}));
+}, 1000)
+
 
 
 

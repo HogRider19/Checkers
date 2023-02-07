@@ -12,6 +12,8 @@
     <img id="board_background" src="{{url_for('static', path='/images/board_1.png')}}" style="display: none;">
 </center>
 
+<p id="message">Message:</p>
+<p id="figureType">Your figures:</p>
 <input type="text" onchange="calltest(this.value)">
 
 <script src="{{url_for('static', path='/js/gameController.js')}}"></script>

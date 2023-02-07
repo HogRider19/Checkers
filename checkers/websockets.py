@@ -3,14 +3,14 @@ from typing import Any
 from checkers.game import GameController
 from checkers.utils import singleton
 from checkers.enums import Figure, GameRsponseCode
-from checkers.enums import ClientMessageType
+from checkers.enums import ClientMessageType, ServerMessageType
 
 import json
 from json import JSONDecodeError
 
 
 def serialize_client_message(
-    message: str) -> dict[ClientMessageType, Any] | None:
+    message: dict) -> dict[ClientMessageType, Any] | None:
     try:
         data = json.loads(message)
     except JSONDecodeError:
@@ -18,13 +18,24 @@ def serialize_client_message(
     
     if isinstance(data, dict) and 'type' in data:
 
-        if data['type'].isdigit():
+        if isinstance(data['type'], int):
 
             try:
-                data['type'] = ClientMessageType(int(data['type']))
+                data['type'] = ClientMessageType(data['type'])
                 return data
             except ValueError:
                 return None
+
+
+def serialize_server_message(type: ServerMessageType, message: Any) -> str:
+    data = None
+    if type == ServerMessageType.Board:
+        data = {'type': type.value, 'message': message}
+
+    if type == ServerMessageType.FigureType:
+        data = {'type': type.value, 'message': message}
+
+    return data
 
 class WebsocketController:
     
@@ -51,6 +62,14 @@ class WebsocketController:
         comand = raw_comand.split(' ')[:2]
         return self._game.make_move(comand)
 
+    def get_figure_type(self, session: WebSocket) -> Figure:
+        if self._sessions['player_1'] == session:
+            return Figure.WHITE
+        elif self._sessions['player_2'] == session:
+            return Figure.BLACK
+        else:
+            return Figure.SPECTATOR
+
     def disconnect(self, session: WebSocket) -> None:
         if session in self._sessions['spectators']:
             self._sessions['spectators'].remove(session)
@@ -75,7 +94,7 @@ class WebsocketController:
             await self._send_message(sp, message)
 
     @staticmethod
-    async def _send_message(session: WebSocket, message: str) -> None:
+    async def send_message(session: WebSocket, message: str) -> None:
         await session.send_json(message)
 
     @property
