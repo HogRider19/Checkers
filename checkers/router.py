@@ -86,8 +86,8 @@ async def connect(ws: WebSocket, id: str = Path(...)) -> None:
                     await ws_controller.send_message(ws, {
                         'type': ServerMessageType.NotYourMove.value})
                     continue
-
-                move_result = ws_controller.make_move(message.get('message'))
+                
+                move_result = ws_controller.make_move(ws, message.get('message'))
 
                 if move_result == GameRsponseCode.success:
                     await ws_controller.send_message_everyone({

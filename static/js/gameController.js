@@ -4,6 +4,14 @@ var game_uuid = window.location.href.split('/').at(-1);
 
 var ws = new WebSocket(url = `ws://localhost:8000/ws/${game_uuid}`);
 
+var board = document.getElementById('board');
+var context = board.getContext("2d");
+
+var board_map = NaN;
+var figure = NaN;
+var targetCell = NaN
+var userFigureImage = NaN
+
 
 const ServerMessageType = {
     FigureType: 0,
@@ -30,6 +38,7 @@ ws.onmessage = function (event)
         case ServerMessageType.FigureType:
             figureText = document.getElementById('figureType');
             figureText.innerText = "Your figures: " + String(data.message);
+            figure = data.message;
             break;
     
         case ServerMessageType.Board:
@@ -46,6 +55,7 @@ ws.onmessage = function (event)
 
         case ServerMessageType.InvalidMove:
             displayMessage("Invalid move! ");
+            drawChoseFigure(3, 3);
             break;
        
         default:
@@ -64,16 +74,17 @@ ws.onclose= function (event)
 }
 
 function displayMessage(message){
-    figureText = document.getElementById('message')
-    figureText.innerText = "Message: " + message
+    ul = document.getElementById('message')
+    li = document.createElement('li')
+    li.innerText = "Message: " + message
+    ul.appendChild(li)
 }
 
 function displayBoard(data) {
-    var board = document.getElementById('board');
-    var context = board.getContext("2d");
     var w_figure = document.getElementById('white_figure')
     var b_figure = document.getElementById('black_figure')
     var background = document.getElementById('board_background')
+    board_map = data;
     context.drawImage(background, 0, 0, 500, 500);
     for (var i = 0; i < 8; i++) {
         for (var j = 0; j < 8; j++) {
@@ -93,15 +104,64 @@ function displayBoard(data) {
     }
 }
 
+function drawChoseFigure(posx, posy, fig)
+{
+
+    if (figure == 0){
+        var figureChoseImage = document.getElementById('white_figure_ch')
+    }
+    else{
+        var figureChoseImage = document.getElementById('black_figure_ch')
+    }
+    if (fig){
+        if (figure == 0){
+            figureChoseImage = document.getElementById('white_figure')
+        }
+        else{
+            figureChoseImage = document.getElementById('black_figure')
+        }
+    }
+
+
+    var offset = 24
+    var size = (500-2*offset)/8
+    var x = offset + size*posy
+    var y = 500 - size*posx - 3.3*offset
+    targetCell = figureChoseImage;
+    context.drawImage(figureChoseImage, x, y, size, size);
+}
+
+
+board.addEventListener('mousedown', function(event) {
+    var rawX = event.pageX - event.target.offsetLeft;
+    var rawY = event.pageY - event.target.offsetTop;
+
+    var offset = 24
+    var size = (500-2*offset)/8
+    x = Math.ceil((rawX - offset) / size) - 1
+    y = 7 - (Math.ceil((rawY - offset) / size) - 1)
+
+    if (board_map[y][x] == figure){
+        drawChoseFigure(targetCell[0], targetCell[1], true);
+        drawChoseFigure(y, x);
+        targetCell = [y, x]
+    }
+
+  });
 
 function calltest(command) {
-    ws.send(command);
+    ws.send(JSON.stringify({
+        'type': ClientMessageType.MakeMove,
+        'message': command,
+    }));
 }
 
 setTimeout(() => {
-    ws.send(JSON.stringify({'type': 0}));
-    ws.send(JSON.stringify({'type': 1}));
+    ws.send(JSON.stringify({'type': ClientMessageType.GetMyFigureType}));
+    ws.send(JSON.stringify({'type': ClientMessageType.GetBoard}));
 }, 1000)
+
+
 
 
 

@@ -85,7 +85,7 @@ class GameController(CellOperationsMixin):
                 eating_cell = move.get_eating_cell()
                 self._board[eating_cell] = None
             self._board[move._from] = None
-            self._board[move._to] = self.whose_move
+            self._board[move._to] = self.whose_move.value
             self._whose_move = 1 if self._whose_move == 0 else 0
         if is_valid:
             return GameRsponseCode.success
@@ -97,8 +97,8 @@ class GameController(CellOperationsMixin):
         return self._board
 
     @property
-    def whose_move(self) -> int:
-        return self._whose_move
+    def whose_move(self) -> Figure:
+        return Figure(self._whose_move)
 
     @property
     def name(self):

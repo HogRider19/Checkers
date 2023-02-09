@@ -5,6 +5,8 @@ from checkers.utils import singleton
 from checkers.enums import Figure, GameRsponseCode
 from checkers.enums import ClientMessageType, ServerMessageType
 
+import re
+
 import json
 from json import JSONDecodeError
 
@@ -59,8 +61,11 @@ class WebsocketController:
         self._sessions['spectators'].append(session)
 
     def make_move(self, session: WebSocket, raw_comand: str) -> GameRsponseCode:
-        comand = raw_comand.split(' ')[:2]
-        return self._game.make_move(comand)
+        comand = re.findall(r'[a-h][1-8]', str(raw_comand))
+        if len(comand) == 2:
+            return self._game.make_move(comand)
+        else:
+            return GameRsponseCode.invalid_move
 
     def get_figure_type(self, session: WebSocket) -> Figure:
         if self._sessions['player_1'] == session:
@@ -85,13 +90,13 @@ class WebsocketController:
 
     async def send_message_players(self, message: str) -> None:
         if self._sessions['player_1'] is not None:
-            await self._send_message(self._sessions['player_1'], message)
+            await self.send_message(self._sessions['player_1'], message)
         if self._sessions['player_2'] is not None:
-            await self._send_message(self._sessions['player_2'], message)
+            await self.send_message(self._sessions['player_2'], message)
 
     async def send_message_spectators(self, message: str) -> None:
         for sp in self._sessions.get('spectators'):
-            await self._send_message(sp, message)
+            await self.send_message(sp, message)
 
     @staticmethod
     async def send_message(session: WebSocket, message: str) -> None:
