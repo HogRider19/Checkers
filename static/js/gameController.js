@@ -9,7 +9,7 @@ var context = board.getContext("2d");
 
 var board_map = NaN;
 var figure = NaN;
-var targetCell = NaN
+var targetCell = NaN;
 var userFigureImage = NaN
 
 
@@ -55,7 +55,6 @@ ws.onmessage = function (event)
 
         case ServerMessageType.InvalidMove:
             displayMessage("Invalid move! ");
-            drawChoseFigure(3, 3);
             break;
        
         default:
@@ -104,7 +103,7 @@ function displayBoard(data) {
     }
 }
 
-function drawChoseFigure(posx, posy, fig)
+function drawChoseFigure(posx, posy, fig=false)
 {
 
     if (figure == 0){
@@ -146,9 +145,8 @@ board.addEventListener('mousedown', function(event) {
         drawChoseFigure(y, x);
         targetCell = [y, x]
     }
-    else if (board_map[y][x] == null && targetCell){
+    else if (board_map[y][x] == null){
         move = boardPositionConvert([targetCell[1], targetCell[0]], [x, y])
-        console.log(move);
         drawChoseFigure(targetCell[0], targetCell[1], true);
         ws.send(JSON.stringify({
             'type': ClientMessageType.MakeMove,
