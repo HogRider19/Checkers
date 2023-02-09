@@ -146,8 +146,28 @@ board.addEventListener('mousedown', function(event) {
         drawChoseFigure(y, x);
         targetCell = [y, x]
     }
+    else if (board_map[y][x] == null && targetCell){
+        move = boardPositionConvert([targetCell[1], targetCell[0]], [x, y])
+        console.log(move);
+        drawChoseFigure(targetCell[0], targetCell[1], true);
+        ws.send(JSON.stringify({
+            'type': ClientMessageType.MakeMove,
+            'message': move,
+        }));
+    }
+
 
   });
+
+function boardPositionConvert(f, t)
+{
+    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    var from = `${letters[f[0]]}${f[1]+1}`;
+    var to = `${letters[t[0]]}${t[1]+1}`;
+    
+    return from + ' ' + to
+}
+
 
 function calltest(command) {
     ws.send(JSON.stringify({
