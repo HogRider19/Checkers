@@ -2,7 +2,8 @@
 
 var game_uuid = window.location.href.split('/').at(-1);
 
-var ws = new WebSocket(url = `ws://localhost:8000/ws/${game_uuid}`);
+let host = window.location.host;
+var ws = new WebSocket(url = `ws:${host}/ws/${game_uuid}`);
 
 var board = document.getElementById('board');
 var context = board.getContext("2d");
@@ -37,12 +38,14 @@ ws.onmessage = function (event)
     {
         case ServerMessageType.FigureType:
             figureText = document.getElementById('figureType');
-            figureText.innerText = "Your figures: " + String(data.message);
+            f = data.message == 0 ? "White" : "Black";
+            figureText.innerText = "Your figures: " + f;
             figure = data.message;
             break;
     
         case ServerMessageType.Board:
-            displayBoard(data.message);
+            rev = figure == 0 ? false : true
+            displayBoard(data.message, rev);
             break;
 
         case ServerMessageType.InvalidRequest:
@@ -79,7 +82,7 @@ function displayMessage(message){
     ul.appendChild(li)
 }
 
-function displayBoard(data) {
+function displayBoard(data, rev=false) {
     var w_figure = document.getElementById('white_figure')
     var b_figure = document.getElementById('black_figure')
     var background = document.getElementById('board_background')
@@ -96,8 +99,18 @@ function displayBoard(data) {
 
             var offset = 24
             var size = (500-2*offset)/8
-            var x = offset + size*j
-            var y = 500 - size*i - 3.3*offset
+            if(rev)
+            {
+                var jr = 7 - j;
+                var ir = 7 - i;
+            }
+            else
+            {
+                var jr = j;
+                var ir = i;
+            }
+            var x = offset + size*jr
+            var y = 500 - size*ir - 3.3*offset
             context.drawImage(figure, x, y, size, size);
         }
     }
@@ -137,17 +150,36 @@ board.addEventListener('mousedown', function(event) {
 
     var offset = 24
     var size = (500-2*offset)/8
-    x = Math.ceil((rawX - offset) / size) - 1
-    y = 7 - (Math.ceil((rawY - offset) / size) - 1)
+    if(figure == 0)
+    {
+        var x = Math.ceil((rawX - offset) / size) - 1
+        var y = 7 - (Math.ceil((rawY - offset) / size) - 1) 
+    }
+    else
+    {
+        var x = 7 - Math.ceil((rawX - offset) / size) + 1
+        var y = (Math.ceil((rawY - offset) / size) - 1)  
+    }
 
     if (board_map[y][x] == figure){
-        drawChoseFigure(targetCell[0], targetCell[1], true);
-        drawChoseFigure(y, x);
+        if(figure == 0){
+            drawChoseFigure(targetCell[0], targetCell[1], true);
+            drawChoseFigure(y, x);
+        }
+        else{
+            drawChoseFigure(7 - targetCell[0], 7 - targetCell[1], true);
+            drawChoseFigure(7 - y, 7 -x);
+        }
         targetCell = [y, x]
     }
     else if (board_map[y][x] == null){
         move = boardPositionConvert([targetCell[1], targetCell[0]], [x, y])
-        drawChoseFigure(targetCell[0], targetCell[1], true);
+        if(figure == 0){
+            drawChoseFigure(targetCell[0], targetCell[1], true);
+        }
+        else{
+            drawChoseFigure(7-targetCell[0], 7-targetCell[1], true);
+        }
         ws.send(JSON.stringify({
             'type': ClientMessageType.MakeMove,
             'message': move,
@@ -178,6 +210,7 @@ setTimeout(() => {
     ws.send(JSON.stringify({'type': ClientMessageType.GetMyFigureType}));
     ws.send(JSON.stringify({'type': ClientMessageType.GetBoard}));
 }, 1000)
+
 
 
 

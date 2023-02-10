@@ -21,7 +21,13 @@
 
 <div class="row">
     <div class="col-md-4">
-        <p id="figureType">Your figures:</p>
+        <br>
+        <h1>Info</h1>
+        <br>
+        <center>
+            <p id="figureType" style="border: 2px solid #D3D3D3; border-radius: 10px; padding: 10px; background-color: #dbe0e4;">Your
+                figures: </p>
+        </center>
         <br>
         <br>
         <ul id="message">
@@ -36,9 +42,22 @@
         <canvas id="board" width="500" height="500" style="background-color:#eee; border:1px solid #ccc;"></canvas>
         <img id="white_figure" src="{{url_for('static', path='/images/white_figure.png')}}" style="display: none;">
         <img id="black_figure" src="{{url_for('static', path='/images/black_figure.png')}}" style="display: none;">
-        <img id="white_figure_ch" src="{{url_for('static', path='/images/white_figure_ch.png')}}" style="display: none;">
-        <img id="black_figure_ch" src="{{url_for('static', path='/images/black_figure_ch.png')}}" style="display: none;">
+        <img id="white_figure_ch" src="{{url_for('static', path='/images/white_figure_ch.png')}}"
+            style="display: none;">
+        <img id="black_figure_ch" src="{{url_for('static', path='/images/black_figure_ch.png')}}"
+            style="display: none;">
         <img id="board_background" src="{{url_for('static', path='/images/board_1.png')}}" style="display: none;">
+    </div>
+    <div class="col-md-4">
+        <br><br><br><br>
+        <div class="row">
+            <div class="col-md-6">
+            </div>
+            <div class="col-md-6">
+                <button type="button" class="btn btn-danger">Surrender</button>
+            </div>
+        </div>
+
     </div>
 </div>
 

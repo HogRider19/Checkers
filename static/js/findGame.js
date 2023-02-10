@@ -1,7 +1,8 @@
 
  
 const request = new XMLHttpRequest();
-const url = "http://localhost:8000/game/list?page=0"
+let host = window.location.host;
+const url = `http://${host}/game/list?page=0`
 
 
 function UpdateGameList(){
@@ -27,7 +28,7 @@ function UpdateGameList(){
                 var child = document.createElement('li')
                 child.className = 'list-group-item'
                 child.innerHTML = `
-                    <form action="http://localhost:8000/game/field/${data[i][1]}" method="get">
+                    <form action="http://${host}/game/field/${data[i][1]}" method="get">
                         <button type="submit" class="btn btn-info">Join</button>
                     </form>
                 `
