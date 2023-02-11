@@ -79,6 +79,15 @@ async def connect(ws: WebSocket, id: str = Path(...)) -> None:
                     'message': ws_controller.game.board.data,
                 })
 
+            elif message.get('type') == ClientMessageType.Surrender:
+                await ws_controller.send_message_everyone({
+                    'type': ServerMessageType.Winner.value,
+                    'message': abs(ws_controller.get_figure_type(ws).value - 1),
+                })
+                # ws_controller.finish()
+                ws_group.delete_game(id)
+                break
+
             elif message.get('type') == ClientMessageType.MakeMove:
                 figure = ws_controller.get_figure_type(ws)
                 whose_move = ws_controller.game.whose_move

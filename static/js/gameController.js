@@ -13,7 +13,6 @@ var figure = NaN;
 var targetCell = NaN;
 var userFigureImage = NaN
 
-
 const ServerMessageType = {
     FigureType: 0,
     Board: 1,
@@ -21,13 +20,18 @@ const ServerMessageType = {
     InvalidRequest: 3,
     NotYourMove: 4,
     InvalidMove: 5,
+    Winner: 6,
 }; 
 
 const ClientMessageType = {
     GetMyFigureType: 0,
     GetBoard: 1,
-    MakeMove: 2, 
+    MakeMove: 2,
+    Surrender: 3,
 }
+
+
+document.getElementById('surrenderButton').addEventListener('click', surrender);
 
 
 ws.onmessage = function (event) 
@@ -58,6 +62,12 @@ ws.onmessage = function (event)
 
         case ServerMessageType.InvalidMove:
             displayMessage("Invalid move! ");
+            break;
+
+        case ServerMessageType.Winner:
+            f = data.message == 0 ? "White" : "Black";
+            displayMessage("Winner: " + f);
+            confirm("Winner: " + f);
             break;
        
         default:
@@ -196,6 +206,14 @@ function boardPositionConvert(f, t)
     var to = `${letters[t[0]]}${t[1]+1}`;
     
     return from + ' ' + to
+}
+
+
+function surrender()
+{
+    ws.send(JSON.stringify({
+        'type': ClientMessageType.Surrender,
+    }));
 }
 
 

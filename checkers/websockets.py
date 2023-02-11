@@ -84,6 +84,12 @@ class WebsocketController:
             if self._sessions['player_2'] == session:
                 self._sessions['player_2'] = None
 
+    def finish(self):
+        if self._sessions['player_1'] is not None:
+            self._sessions['player_1'].close()
+        if self._sessions['player_2']is not None:
+            self._sessions['player_2'].close()
+
     async def send_message_everyone(self, message: str) -> None:
         await self.send_message_players(message)
         await self.send_message_spectators(message)
@@ -105,6 +111,12 @@ class WebsocketController:
     @property
     def game(self) -> GameController:
         return self._game
+
+    @property
+    def enemy(self, current_ws: WebSocket) -> WebSocket:
+        if current_ws == self._sessions['player_1']:
+            return self._sessions['player_2']
+        return self._sessions['player_1']
 
     @property
     def name(self):
@@ -133,6 +145,9 @@ class WebSocketControllerGroup:
             self._groups.update({id: WebsocketController(name, password)})
             created = True
         return created
+
+    def delete_game(self, controller: WebsocketController) -> None:
+        del self._groups[controller]
 
     def delete_game(self, id: str) -> None:
         del self._groups[id]

@@ -160,11 +160,12 @@ class Move(CellOperationsMixin):
             return True
         return False
 
-    def get_eating_cell(self) -> None:
+    def get_eating_cell(self) -> str:
+        print(f"pos = {self._from} drow = {self._direct} dcol =  {1 if self._to_ci > self._from_ci else 0}")
         return self._get_displace_cell(
             pos=self._from,
             drow=self._direct,
-            dcol=1 if self._to_ci > self._from_ci else 0,
+            dcol=1 if self._to_ci > self._from_ci else -1,
         )
 
     def _get_allowed_cells(self) -> list[str]:

@@ -16,6 +16,7 @@ class ClientMessageType(Enum):
     GetMyFigureType: int = 0
     GetBoard: int = 1
     MakeMove: int = 2
+    Surrender: int = 3
 
 
 class ServerMessageType(Enum):
@@ -25,4 +26,5 @@ class ServerMessageType(Enum):
     InvalidRequest: int = 3
     NotYourMove: int = 4
     InvalidMove: int = 5
+    Winner: int = 6
     
