@@ -67,7 +67,9 @@ ws.onmessage = function (event)
         case ServerMessageType.Winner:
             f = data.message == 0 ? "White" : "Black";
             displayMessage("Winner: " + f);
-            confirm("Winner: " + f);
+            buttonform = document.getElementById("exitButton")
+            buttonform.style.display = 'block'
+            // confirm("Winner: " + f);
             break;
        
         default:

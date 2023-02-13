@@ -53,8 +53,12 @@
         <div class="row">
             <div class="col-md-6">
             </div>
-            <div class="col-md-6">
+            <div id="buttons" class="col-md-6">
                 <button id="surrenderButton" type="button" class="btn btn-danger">Surrender</button>
+                <form id="exitButton" action="{{ url_for('home') }}" method="get" style="display: none;">
+                    <br>
+                    <button id="surrenderButton" type="input" class="btn btn-success">Exit</button>
+                </form>
             </div>
         </div>
 

@@ -28,11 +28,18 @@ function UpdateGameList(){
                 var child = document.createElement('li')
                 child.className = 'list-group-item'
                 child.innerHTML = `
-                    <form action="http://${host}/game/field/${data[i][1]}" method="get">
+                <div class="row">
+                    <div class="col-md-6"">
+                    <h4 style="float: left">${data[i][0]}</h4>
+                    </div>
+                    <div class="col-md-6">
+                    <form action="http://${host}/game/field/${data[i][1]}" method="get"" style="float: right">
                         <button type="submit" class="btn btn-info">Join</button>
                     </form>
+                    </div>
+                </div>
                 `
-                child.prepend(document.createTextNode(data[i][0]));
+                //child.prepend(document.createTextNode(data[i][0]));
                 gameUI.appendChild(child);
             }
         }
