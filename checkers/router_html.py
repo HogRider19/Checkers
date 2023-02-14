@@ -22,3 +22,7 @@ def game_create(request: Request):
 @checkers_html_router.get('/game/field/{id}')
 def game_field(request: Request, id: str):
     return templates.TemplateResponse('checkers/gameField.html', context={'request': request})
+
+@checkers_html_router.get('/signup')
+def signup(request: Request):
+    return templates.TemplateResponse('auth/signup.html', context={'request': request})

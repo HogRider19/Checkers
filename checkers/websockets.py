@@ -12,12 +12,12 @@ from json import JSONDecodeError
 
 
 def serialize_client_message(
-    message: dict) -> dict[ClientMessageType, Any] | None:
+        message: dict) -> dict[ClientMessageType, Any] | None:
     try:
         data = json.loads(message)
     except JSONDecodeError:
         return None
-    
+
     if isinstance(data, dict) and 'type' in data:
 
         if isinstance(data['type'], int):
@@ -29,18 +29,8 @@ def serialize_client_message(
                 return None
 
 
-def serialize_server_message(type: ServerMessageType, message: Any) -> str:
-    data = None
-    if type == ServerMessageType.Board:
-        data = {'type': type.value, 'message': message}
-
-    if type == ServerMessageType.FigureType:
-        data = {'type': type.value, 'message': message}
-
-    return data
-
 class WebsocketController:
-    
+
     def __init__(self, name: str, password: str) -> None:
         self._game = GameController(name, password)
         self._sessions = {
@@ -49,16 +39,13 @@ class WebsocketController:
             'spectators': [],
         }
 
-    def add_player(self, session: WebSocket) -> Figure:
+    def add_player(self, session: WebSocket) -> Figure | None:
         if self._sessions['player_1'] is None:
             self._sessions['player_1'] = session
             return Figure.WHITE.value
         elif self._sessions['player_2'] is None:
             self._sessions['player_2'] = session
             return Figure.BLACK.value
-
-    def add_spectators(self, session: WebSocket) -> None:
-        self._sessions['spectators'].append(session)
 
     def make_move(self, session: WebSocket, raw_comand: str) -> GameRsponseCode:
         comand = re.findall(r'[a-h][1-8]', str(raw_comand))
@@ -87,7 +74,7 @@ class WebsocketController:
     def finish(self):
         if self._sessions['player_1'] is not None:
             self._sessions['player_1'].close()
-        if self._sessions['player_2']is not None:
+        if self._sessions['player_2'] is not None:
             self._sessions['player_2'].close()
 
     async def send_message_everyone(self, message: str) -> None:
@@ -126,9 +113,10 @@ class WebsocketController:
     def password(self):
         return self._game.password
 
+
 @singleton
 class WebSocketControllerGroup:
-    
+
     def __init__(self, limit: int) -> None:
         self._groups: dict[str, WebsocketController] = {}
         self._limit = limit

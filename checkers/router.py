@@ -36,20 +36,13 @@ async def connect(ws: WebSocket, id: str = Path(...)) -> None:
 
     await ws.accept()
 
-    logger.debug(f"ws_group = {ws_group._groups}")
-
     ws_controller = ws_group[id]
 
-    logger.debug(f"ws_controller = {ws_controller}")
-
     if ws_controller is None:
-        logger.debug("ws_controller is None")
         raise WebSocketException(
             code=1000, reason=f'Game with id:{id} does not exist')
 
     figure = ws_controller.add_player(ws)
-
-    logger.debug(f"figure = {figure}")
 
     if figure is None:
         logger.debug("figure is None")
@@ -84,7 +77,6 @@ async def connect(ws: WebSocket, id: str = Path(...)) -> None:
                     'type': ServerMessageType.Winner.value,
                     'message': abs(ws_controller.get_figure_type(ws).value - 1),
                 })
-                # ws_controller.finish()
                 ws_group.delete_game(id)
                 break
 
@@ -108,6 +100,5 @@ async def connect(ws: WebSocket, id: str = Path(...)) -> None:
                         'type': ServerMessageType.InvalidMove.value})
 
         except WebSocketDisconnect:
-            logger.debug("disconnect")
             ws_controller.disconnect(ws)
             break
