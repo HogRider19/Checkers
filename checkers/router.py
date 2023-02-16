@@ -1,11 +1,14 @@
 from uuid import uuid4
+
+from fastapi import (APIRouter, Body, Path, Query, WebSocket,
+                     WebSocketDisconnect, WebSocketException)
 from loguru import logger
 
-from fastapi import (APIRouter, Path, WebSocket, WebSocketDisconnect,
-                     WebSocketException, Body, Query)
+from checkers.enums import (ClientMessageType, GameRsponseCode,
+                            ServerMessageType)
+from checkers.websockets import (WebSocketControllerGroup,
+                                 serialize_client_message)
 
-from checkers.enums import GameRsponseCode, ServerMessageType, ClientMessageType, Figure
-from checkers.websockets import WebSocketControllerGroup, serialize_client_message
 
 checkers_router = APIRouter()
 ws_group = WebSocketControllerGroup(limit=10)

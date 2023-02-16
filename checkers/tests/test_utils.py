@@ -1,7 +1,9 @@
-from checkers.websockets import serialize_client_message
-from checkers.enums import ClientMessageType as ClientType
 from json import dumps
+
 import pytest
+
+from checkers.enums import ClientMessageType as ClientType
+from checkers.websockets import serialize_client_message
 
 
 @pytest.mark.parametrize('message, type', [

@@ -1,14 +1,13 @@
-from fastapi import WebSocket
+import json
+import re
+from json import JSONDecodeError
 from typing import Any
+
+from fastapi import WebSocket
+
+from checkers.enums import ClientMessageType, Figure, GameRsponseCode
 from checkers.game import GameController
 from checkers.utils import singleton
-from checkers.enums import Figure, GameRsponseCode
-from checkers.enums import ClientMessageType, ServerMessageType
-
-import re
-
-import json
-from json import JSONDecodeError
 
 
 def serialize_client_message(
